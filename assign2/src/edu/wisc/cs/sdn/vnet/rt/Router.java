@@ -7,6 +7,9 @@ import edu.wisc.cs.sdn.vnet.Iface;
 import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPacket;
 import net.floodlightcontroller.packet.IPv4;
+import net.floodlightcontroller.packet.MACAddress;
+
+import java.util.Map;
 
 /**
  * @author Aaron Gember-Jacobson and Anubhavnidhi Abhashkumar
@@ -84,10 +87,39 @@ public class Router extends Device {
 			pkt.resetChecksum();
 			byte[] buffer = pkt.serialize();
 			IPv4 payload = (IPv4) pkt.deserialize(buffer, 0, pkt.getTotalLength());
+
 			if(receivedChecksum == payload.getChecksum()) {
+				pkt.setTtl((byte)(pkt.getTtl()-1));
+				if (pkt.getTtl() == 0) return; // drop packet
+
+				Map<String,Iface> rtInterfaces = this.getInterfaces();
+
+				for (Map.Entry<String, Iface> entry: rtInterfaces.entrySet()){
+					if (entry.getValue().getIpAddress() == pkt.getDestinationAddress()){
+						System.out.println("Packet dropped. destination address matched one of the router's interfaces' IP address");
+						return;
+					}
+				}
+
 				int destAddr = pkt.getDestinationAddress();
-				routeTable.lookup(destAddr);
+				RouteEntry nextHop = routeTable.lookup(destAddr);
+				if (nextHop == null) return; // no route found
+
+
+				int nextHopIP = nextHop.getInterface().getIpAddress();
+				ArpEntry nextHopEntry = arpCache.lookup(nextHopIP);
+
+				MACAddress nextHopMAC = nextHopEntry.getMac();
+				etherPacket.setDestinationMACAddress(nextHopMAC.toBytes());
+				etherPacket.setSourceMACAddress(nextHop.getInterface().getMacAddress().toBytes());
+
+				sendPacket(etherPacket, nextHop.getInterface());
+
+
+
 			}
+
+
 			
 		}
 		/********************************************************************/
