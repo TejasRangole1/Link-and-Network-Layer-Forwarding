@@ -104,10 +104,11 @@ public class Router extends Device {
 				int destAddr = pkt.getDestinationAddress();
 				RouteEntry nextHop = routeTable.lookup(destAddr);
 				if (nextHop == null) return; // no route found
-
+				System.out.println("Router.java : " + "next hop address: " + nextHop.getInterface().getIpAddress());
 
 				int nextHopIP = nextHop.getInterface().getIpAddress();
-				ArpEntry nextHopEntry = arpCache.lookup(nextHopIP);
+				
+				ArpEntry nextHopEntry = arpCache.lookup((nextHopIP == 0) ? pkt.getDestinationAddress() : nextHopIP);
 
 				MACAddress nextHopMAC = nextHopEntry.getMac();
 				etherPacket.setDestinationMACAddress(nextHopMAC.toBytes());

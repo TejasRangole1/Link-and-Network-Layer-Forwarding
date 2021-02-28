@@ -77,6 +77,8 @@ public class RouteTable {
 					int matchScore = ip ^ currAddr;
 					bestMatch = (matchScore > longestMatch) ? block : bestMatch;
 					longestMatch = Math.max(longestMatch, matchScore);
+					System.out.println("RouteEntry.java(): " + "ip " + ip + " current address: " + currAddr + "subnet mask: " + subnetMask + 
+							"match score: " + matchScore + "longest match: " + longestMatch);
 				}
 			}
 			return bestMatch;
