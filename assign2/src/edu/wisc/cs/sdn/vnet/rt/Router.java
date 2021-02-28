@@ -80,9 +80,15 @@ public class Router extends Device {
 		System.out.println("*** -> Received packet: " + etherPacket.toString().replace("\n", "\n\t"));
 		if (etherPacket.getEtherType() == Ethernet.TYPE_IPv4) {
 			IPv4 pkt = (IPv4) etherPacket.getPayload();
-			int destAddr = pkt.getDestinationAddress();
-			System.out.println("Router.java : handlePacket() : destAddr: " + destAddr);
-			routeTable.lookup(destAddr);
+			short receivedChecksum = pkt.getChecksum();
+			pkt.resetChecksum();
+			byte[] buffer = pkt.serialize();
+			IPv4 payload = (IPv4) pkt.deserialize(buffer, 0, pkt.getTotalLength());
+			if(receivedChecksum == payload.getChecksum()) {
+				int destAddr = pkt.getDestinationAddress();
+				routeTable.lookup(destAddr);
+			}
+			
 		}
 		/********************************************************************/
 		/* TODO: Handle packets */
