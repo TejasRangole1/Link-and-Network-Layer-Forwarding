@@ -74,7 +74,18 @@ public class RouteTable {
 				// anding subnet mask with addr to check if dest is in same network
 				if ((ip & subnetMask) == (currAddr & subnetMask)) {
 					// longest-prefix match
+					/*
 					int matchScore = ip ^ currAddr;
+					bestMatch = (matchScore > longestMatch) ? block : bestMatch;
+					longestMatch = Math.max(longestMatch, matchScore);
+					*/
+					String ipString = Integer.toBinaryString(ip);
+					String currAddrString = Integer.toBinaryString(currAddr);
+					int matchScore = 0;
+					for(int i = 0; i < 32; i++) {
+					    if(ipString.charAt(i) != currAddrString.charAt(i)) break;
+						matchScore++;
+					}
 					bestMatch = (matchScore > longestMatch) ? block : bestMatch;
 					longestMatch = Math.max(longestMatch, matchScore);
 					System.out.println("RouteEntry.java(): " + "ip " + ip + " current address: " + currAddr + "subnet mask: " + subnetMask + 
