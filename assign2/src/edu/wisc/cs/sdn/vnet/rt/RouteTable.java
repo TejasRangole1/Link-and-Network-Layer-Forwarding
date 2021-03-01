@@ -39,33 +39,6 @@ public class RouteTable {
 	public RouteEntry lookup(int ip) {
 
 		synchronized (this.entries) {
-			/*
-			 * String bitIp = Integer.toBinaryString(ip); // going to compare by bits int
-			 * longestMatch = 0; RouteEntry bestMatch = null;
-			 * 
-			 * for (RouteEntry entry : this.entries) { String destIp =
-			 * Integer.toBinaryString(entry.getDestinationAddress()); String mask =
-			 * Integer.toBinaryString(entry.getMaskAddress());
-			 * 
-			 * int prefix = 0; // number of 1's in the mask for (int i = 0; i <
-			 * mask.length(); i++) { if (mask.charAt(i) == '1') { prefix++; } else { break;
-			 * } }
-			 * 
-			 * String networkAddr = destIp.substring(0, prefix); // only need prefix
-			 * 
-			 * int count = 0; for (int j = 0; j < networkAddr.length(); j++) { if
-			 * (bitIp.charAt(j) == networkAddr.charAt(j)) { count++; } else { break; }
-			 * 
-			 * }
-			 * 
-			 * if (count == networkAddr.length()) return entry;
-			 * 
-			 * if (count > longestMatch) { longestMatch = count; bestMatch = entry; } }
-			 * 
-			 * return bestMatch;
-			 * 
-			 * }
-			 */
 			RouteEntry bestMatch = null;
 			int longestMatch = 0;
 			for (RouteEntry block : entries) {
@@ -73,23 +46,23 @@ public class RouteTable {
 				int subnetMask = block.getMaskAddress();
 				// anding subnet mask with addr to check if dest is in same network
 				if ((ip & subnetMask) == (currAddr & subnetMask)) {
-					// longest-prefix match
 					/*
-					int matchScore = ip ^ currAddr;
-					bestMatch = (matchScore > longestMatch) ? block : bestMatch;
-					longestMatch = Math.max(longestMatch, matchScore);
-					*/
 					String ipString = Integer.toBinaryString(ip);
 					String currAddrString = Integer.toBinaryString(currAddr);
 					int matchScore = 0;
-					for(int i = 0; i < 32; i++) {
-					    if(ipString.charAt(i) != currAddrString.charAt(i)) break;
+					for (int i = 0; i < 32; i++) {
+						if (ipString.charAt(i) != currAddrString.charAt(i))
+							break;
 						matchScore++;
 					}
-					bestMatch = (matchScore > longestMatch) ? block : bestMatch;
-					longestMatch = Math.max(longestMatch, matchScore);
-					System.out.println("RouteEntry.java(): " + "ip " + ip + " current address: " + currAddr + "subnet mask: " + subnetMask + 
-							"match score: " + matchScore + "longest match: " + longestMatch);
+					*/
+					// xoring two addrs. If the result of the xor is lesser then that means the prefix is a better match
+					int matchScore = ip ^ currAddr;
+					bestMatch = (matchScore < longestMatch) ? block : bestMatch;
+					longestMatch = Math.min(longestMatch, matchScore);
+					System.out.println(
+							"RouteEntry.java(): " + "ip " + ip + " current address: " + currAddr + "subnet mask: "
+									+ subnetMask + "match score: " + matchScore + "longest match: " + longestMatch);
 				}
 			}
 			return bestMatch;
