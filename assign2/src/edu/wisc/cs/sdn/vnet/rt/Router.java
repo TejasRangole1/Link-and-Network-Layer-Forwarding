@@ -84,7 +84,7 @@ public class Router extends Device {
 		if (etherPacket.getEtherType() == Ethernet.TYPE_IPv4) {
 			IPv4 pkt = (IPv4) etherPacket.getPayload();
 			short receivedChecksum = pkt.getChecksum();
-			pkt.resetChecksum();
+			pkt.setChecksum((short) 0);
 			byte[] buffer = pkt.serialize();
 			IPv4 payload = (IPv4) pkt.deserialize(buffer, 0, pkt.getTotalLength());
 
@@ -104,18 +104,23 @@ public class Router extends Device {
 				int destAddr = pkt.getDestinationAddress();
 				RouteEntry nextHop = routeTable.lookup(destAddr);
 				if (nextHop == null) return; // no route found
-				System.out.println("Router.java : " + "next hop address: " + nextHop.getInterface().getIpAddress());
+				// System.out.println("Router.java : handlePacket():  " + "next hop address: " + nextHop.getInterface().getIpAddress());
 
-				int nextHopIP = nextHop.getInterface().getIpAddress();
-				
+ 				int nextHopIP = nextHop.getGatewayAddress();
+                System.out.println("Router.java: handlePacket(): next hop ip address: " + IPv4.fromIPv4Address(nextHopIP));				
 				ArpEntry nextHopEntry = arpCache.lookup((nextHopIP == 0) ? pkt.getDestinationAddress() : nextHopIP);
-
+                        
 				MACAddress nextHopMAC = nextHopEntry.getMac();
-				etherPacket.setDestinationMACAddress(nextHopMAC.toBytes());
-				etherPacket.setSourceMACAddress(nextHop.getInterface().getMacAddress().toBytes());
-
-				sendPacket(etherPacket, nextHop.getInterface());
-
+				System.out.println("Router.java : handlePacket(): mac address of next hop" + nextHopMAC.toString());
+				Ethernet newPacket = new Ethernet();
+				pkt.setChecksum((short) 0);
+				newPacket.setEtherType(Ethernet.TYPE_IPv4);
+				newPacket.setPayload(pkt);
+				newPacket.setDestinationMACAddress(nextHopMAC.toBytes());
+				newPacket.setSourceMACAddress(nextHop.getInterface().getMacAddress().toBytes());
+				
+				sendPacket(newPacket, nextHop.getInterface());
+				System.out.println("*** -> Sent packet: " + newPacket.toString().replace("\n", "\n\t"));
 
 
 			}

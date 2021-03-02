@@ -40,7 +40,7 @@ public class RouteTable {
 
 		synchronized (this.entries) {
 			RouteEntry bestMatch = null;
-			int longestMatch = 0;
+			int longestMatch = Integer.MAX_VALUE;
 			for (RouteEntry block : entries) {
 				int currAddr = block.getDestinationAddress();
 				int subnetMask = block.getMaskAddress();
@@ -56,13 +56,13 @@ public class RouteTable {
 						matchScore++;
 					}
 					*/
-					// xoring two addrs. If the result of the xor is lesser then that means the prefix is a better match
+					// xoring two addrs. If the result of the xor is lesser then that means the prefix is a better match since more bits are the same
 					int matchScore = ip ^ currAddr;
 					bestMatch = (matchScore < longestMatch) ? block : bestMatch;
 					longestMatch = Math.min(longestMatch, matchScore);
 					System.out.println(
-							"RouteEntry.java(): " + "ip " + ip + " current address: " + currAddr + "subnet mask: "
-									+ subnetMask + "match score: " + matchScore + "longest match: " + longestMatch);
+							"RouteTable.java : lookup(): " + "ip " + IPv4.fromIPv4Address(ip) + " current address: " + IPv4.fromIPv4Address(currAddr) + " subnet mask: "
+									+ subnetMask + " match score: " + matchScore + " longest match: " + longestMatch);
 				}
 			}
 			return bestMatch;
